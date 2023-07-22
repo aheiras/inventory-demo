@@ -1,0 +1,86 @@
+﻿@page "/"
+@page "/login"
+@inject NavigationManager Navigation;
+@inject IUserService userService;
+
+@using BlazorUI.Services;
+@using MatBlazor
+
+
+
+<MatDialog @bind-IsOpen="@dialogIsOpen">
+    <MatDialogTitle>Inicio de sesión fallido</MatDialogTitle>
+    <MatDialogContent>
+        <p>El usuario o contraseña es incorrecto</p>
+    </MatDialogContent>
+    <MatDialogActions>
+        <MatButton OnClick="@(e => { dialogIsOpen = false; })">Aceptar</MatButton>
+    </MatDialogActions>
+</MatDialog>
+
+
+<div class="mat-layout-grid">
+    <div class="mat-layout-grid-inner">
+        <div class="mat-layout-grid-cell"></div>
+        <div class="mat-layout-grid-cell-span-6">
+            <MatCard>
+                <MatCardContent>
+                    <br>
+                    <br>
+                    <br>
+                    <h3>Bienvenido, Inicia sesión para continuar</h3>
+                    <MatTextField Label="Email" @bind-Value="@email"></MatTextField>
+                    <MatTextField Label="Password" @bind-Value="@password" Type="password"></MatTextField>
+                </MatCardContent>
+                <MatCardActions>
+                    <MatButton OnClick="@Accept_OnClick">Aceptar</MatButton>
+                </MatCardActions>
+            </MatCard>
+        </div>
+        <div class="mat-layout-grid-cell"></div>
+    </div>
+</div>
+
+
+
+@code {
+    private string email;
+    private string password;
+    private bool dialogIsOpen = false;
+
+    [CascadingParameter]
+    public LoggedUser loggedUser { get; set; }
+
+    private async void Accept_OnClick()
+    {
+        // Perform login logic here
+        // For simplicity, let's assume it's successful if the username and password are not empty
+        if (!string.IsNullOrEmpty(email) && !string.IsNullOrEmpty(password))
+        {
+            var login = await userService.LoginAsync(email, password);
+            if(login != null)
+            {
+                loggedUser.SetUser(login);
+                // Redirect to a different page after successful login
+                // For example, navigate to a dashboard page
+                Navigation.NavigateTo("/inventory");
+            }
+            else
+            {
+                dialogIsOpen = true;
+            }
+
+        }
+        else
+        {
+            dialogIsOpen = true;
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        email = "";
+        password = "";
+    }
+
+}

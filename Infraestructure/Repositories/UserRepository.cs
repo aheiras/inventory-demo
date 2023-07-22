@@ -29,7 +29,7 @@ namespace Infraestructure.Repositories
             return await _context.SaveChangesAsync() > 0;
         }
 
-        public async Task<User> GetUserByIdAsync(int id)
+        public async Task<User?> GetUserByIdAsync(int id)
         {
             return await _context.Users.FindAsync(id);
         }
@@ -48,6 +48,14 @@ namespace Infraestructure.Repositories
         public bool IsUserTableEmpty()
         {
             return !_context.Users.Any();
+        }
+
+        public async Task<User?> LoginAsync(string email, string pass)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(x => x.Email == email);
+            if (user == null) return null;
+            if (pass != user.Password) return null;
+            return user;
         }
     }
 }

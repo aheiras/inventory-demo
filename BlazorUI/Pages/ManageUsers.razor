@@ -1,0 +1,150 @@
+﻿@page "/usersmanagement"
+@page "/usersmanagement/{Id:int}"
+@inject NavigationManager Navigation;
+@inject IUserService userService;
+
+@using BlazorUI.Services;
+@using MatBlazor
+
+<h3>Crear/Editar Usuarios</h3>
+
+<div class="mat-layout-grid">
+    <div class="mat-layout-grid-inner">
+        <div class="mat-layout-grid-cell"></div>
+        <div class="mat-layout-grid-cell-span-6">
+            <MatCard>
+                <MatCardContent>
+                    <br>
+                    <br>
+                    <br>
+                    <h3>Datos del Usuario</h3>
+                    <MatTextField Label="Nombre" @bind-Value="@name"></MatTextField>
+                    <MatTextField Label="Email" @bind-Value="@email" InputType="MatTextFieldInputType.Password"></MatTextField>
+                    <MatTextField Label="Contraseña" @bind-Value="@password" Type="password"></MatTextField>
+                    <MatSelect Label="Seccione un tipo de Usuario" @bind-Value="@userType">
+                        <MatOptionString Value="admin">Administrador</MatOptionString>
+                        <MatOptionString Value="regular">Regular</MatOptionString>
+                    </MatSelect>
+                </MatCardContent>
+                <MatCardActions>
+                    <MatButton OnClick="@Cancel_OnClick">Cancelar</MatButton>
+                    <MatButton OnClick="@Accept_OnClick">Aceptar</MatButton>
+                </MatCardActions>
+            </MatCard>
+        </div>
+        <div class="mat-layout-grid-cell"></div>
+    </div>
+</div>
+
+<MatDialog @bind-IsOpen="@dialogIsOpen">
+    <MatDialogTitle>@title</MatDialogTitle>
+    <MatDialogContent>
+        <p>@message</p>
+    </MatDialogContent>
+    <MatDialogActions>
+        <MatButton OnClick="@(e => {
+                            dialogIsOpen = false;
+                            if(title != "Error")
+                            {
+                                Cancel_OnClick();
+                            }
+                        })">Aceptar</MatButton>
+    </MatDialogActions>
+</MatDialog>
+
+@code {
+    [Parameter]
+    public int? Id { get; set; }
+
+    private string name;
+    private string email;
+    private string password;
+    private string userType;
+    private bool dialogIsOpen = false;
+    private string title;
+    private string message;
+
+    [CascadingParameter]
+    public LoggedUser loggedUser { get; set; }
+
+    private async void Accept_OnClick()
+    {
+
+        // Perform login logic here
+        // For simplicity, let's assume it's successful if the username and password are not empty
+        if (!string.IsNullOrEmpty(email) && !string.IsNullOrEmpty(password) && !string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(userType))
+        {
+            if (Id != null && Id != 0)
+            {
+                var currentUser = await userService.GetUserByIdAsync(Id.Value);
+                var updated = await userService.UpdateUserAsync(Id.Value, currentUser);
+                if (updated)
+                {
+                    title = "Éxito";
+                    message = "El usuario se ha actualizado con éxito";
+                    dialogIsOpen = true;
+                }
+                else
+                {
+                    title = "Error";
+                    message = "Verifique los datos, ha ocurrido un error";
+                    dialogIsOpen = true;
+                }
+            }
+            else
+            {
+                var created = await userService.CreateUserAsync(new Domain.Entities.User
+                {
+                    Email = email,
+                    Name = name,
+                    Password = password,
+                    Type = userType
+                });
+                if (created != null)
+                {
+                    title = "Éxito";
+                    message = "El usuario se ha creado con éxito";
+                    dialogIsOpen = true;
+                }
+                else
+                {
+                    title = "Error";
+                    message = "Verifique los datos, ha ocurrido un error";
+                    dialogIsOpen = true;
+                }
+            }
+
+        }
+        else
+        {
+            title = "Error";
+            message = "Verifique los datos, hay campos vacios";
+            dialogIsOpen = true;
+            dialogIsOpen = true;
+        }
+    }
+
+    private void Cancel_OnClick()
+    {
+        Navigation.NavigateTo("/users");
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Id != null && Id != 0)
+        {
+            var currentUser = await userService.GetUserByIdAsync(Id.Value);
+            if (currentUser != null)
+            {
+                name = currentUser.Name;
+                email = currentUser.Email;
+                password = currentUser.Password;
+                userType = currentUser.Type;
+            }
+            else
+            {
+                Navigation.NavigateTo("/usersmanagement");
+            }
+        }
+    }
+}

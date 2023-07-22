@@ -1,0 +1,93 @@
+﻿@page "/users"
+@using BlazorUI.Services;
+@using Domain.Entities;
+@inject NavigationManager Navigation;
+@inject IUserService userService;
+
+
+<h3>Usuarios</h3>
+<MatCard>
+    <MatCardContent>
+        <br>
+        <br>
+        <br>
+        <MatButton Raised="true" Icon="person_add" @onclick="(() => NewUser_OnClick())">Usuario Nuevo</MatButton>
+    </MatCardContent>
+</MatCard>
+<br/>
+<MatTable Items="users"
+          class="mat-elevation-z5"
+          AllowSelection="true">
+    <MatTableHeader>
+        <th>Id</th>
+        <th>Nombre</th>
+        <th>Email</th>
+        <th>Tipo</th>
+    </MatTableHeader>
+    <MatTableRow>
+        <td>@context.Id</td>
+        <td>@context.Name</td>
+        <td>@context.Email</td>
+        <td>@context.Type</td>
+        <td>
+            <MatIcon Icon="create" @onclick="(() => EditOnClick(context))"></MatIcon>
+        </td>
+        <td>
+            <MatIcon Icon="clear" @onclick="(() => DeleteOnClick(context))"></MatIcon>
+        </td>
+    </MatTableRow>
+</MatTable>
+
+
+<MatDialog @bind-IsOpen="@deleteDialogIsOpen">
+    <MatDialogTitle>Borrar Usuario</MatDialogTitle>
+    <MatDialogContent>
+        <p>@deletedMessage</p>
+    </MatDialogContent>
+    <MatDialogActions>
+        <MatButton OnClick="@(e => { deleteDialogIsOpen = false; Navigation.NavigateTo($"/users");})">Aceptar</MatButton>
+    </MatDialogActions>
+</MatDialog>
+
+@code
+{
+    [CascadingParameter]
+    public LoggedUser loggedUser { get; set; }
+
+    private bool deleteDialogIsOpen = false;
+    private string deletedMessage = "";
+
+    private string _currentSelectedPerson = "noone";
+
+    IEnumerable<User?>? users = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        users = await userService.GetUsersAsync();
+    }
+
+    private void EditOnClick(User? user)
+    {
+        Navigation.NavigateTo($"/usersmanagement/{user.Id}");
+    }
+
+    private void NewUser_OnClick()
+    {
+        Navigation.NavigateTo($"/usersmanagement");
+    }
+
+    private async Task DeleteOnClick(User? user)
+    {
+        if (user == null) return;
+        var isDeleted = await userService.DeleteUserAsync(user.Id);
+        if (isDeleted)
+        {
+            deletedMessage = "Se ha eliminado el registro del usuario";
+        }
+        else
+        {
+            deletedMessage = "Hubo un error al eliminar el usuario";
+        }
+        deleteDialogIsOpen = true;
+    }
+}

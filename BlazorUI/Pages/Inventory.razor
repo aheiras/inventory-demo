@@ -1,0 +1,94 @@
+﻿@page "/inventory"
+@using BlazorUI.Services;
+@using Domain.Entities;
+@inject NavigationManager Navigation;
+@inject IInventoryService inventoryService;
+
+<h3>Inventario</h3>
+<MatCard>
+    <MatCardContent>
+        <br>
+        <br>
+        <br>
+        <MatButton Raised="true" Icon="add_box" @onclick="(() => NewProduct_OnClick())">Agregar Producto</MatButton>
+    </MatCardContent>
+</MatCard>
+<br />
+<MatTable Items="inventory"
+          class="mat-elevation-z5"
+          AllowSelection="true">
+    <MatTableHeader>
+        <th>Id</th>
+        <th>Sku</th>
+        <th>Producto</th>
+        <th>Valor</th>
+        <th>Cantidad</th>
+    </MatTableHeader>
+    <MatTableRow>
+        <td>@context.Id</td>
+        <td>@context.Product.Sku</td>
+        <td>@context.Product.ProductName</td>
+        <td>@context.Product.Value</td>
+        <td>@context.Quantity</td>
+        <td>
+            <MatIcon Icon="create" @onclick="(() => EditOnClick(context))"></MatIcon>
+        </td>
+        <td>
+            <MatIcon Icon="clear" @onclick="(() => DeleteOnClick(context))"></MatIcon>
+        </td>
+    </MatTableRow>
+</MatTable>
+
+
+<MatDialog @bind-IsOpen="@deleteDialogIsOpen">
+    <MatDialogTitle>Borrar Producto</MatDialogTitle>
+    <MatDialogContent>
+        <p>@deletedMessage</p>
+    </MatDialogContent>
+    <MatDialogActions>
+        <MatButton OnClick="@(e => { deleteDialogIsOpen = false; Navigation.NavigateTo($"/inventory");})">Aceptar</MatButton>
+    </MatDialogActions>
+</MatDialog>
+
+@code
+{
+    [CascadingParameter]
+    public LoggedUser loggedUser { get; set; }
+
+    private bool deleteDialogIsOpen = false;
+    private string deletedMessage = "";
+
+    private string _currentSelectedPerson = "noone";
+
+    IEnumerable<Domain.Entities.Inventory?>? inventory = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        inventory = await inventoryService.GetInventoryAsync();
+    }
+
+    private void EditOnClick(Domain.Entities.Inventory? inventory)
+    {
+        Navigation.NavigateTo($"/inventorymanagement/{inventory.Id}");
+    }
+
+    private void NewProduct_OnClick()
+    {
+        Navigation.NavigateTo($"/inventorymanagement");
+    }
+
+    private async Task DeleteOnClick(Domain.Entities.Inventory? inventory)
+    {
+        if (inventory == null) return;
+        var isDeleted = await inventoryService.DeleteProductAsync(inventory.Product.Id);
+        if (isDeleted)
+        {
+            deletedMessage = "Se ha eliminado el registro del usuario";
+        }
+        else
+        {
+            deletedMessage = "Hubo un error al eliminar el usuario";
+        }
+        deleteDialogIsOpen = true;
+    }
+}
