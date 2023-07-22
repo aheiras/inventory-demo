@@ -55,6 +55,14 @@ namespace Web.Api.Controllers
             if (!result) return NotFound();
             return NoContent();
         }
+
+        [HttpGet("Login")]
+        public async Task<IActionResult> Login([FromHeader] string email, [FromHeader] string password)
+        {
+            var result = await _userService.LoginAsync(email, password);
+            if (result == null) return NotFound();
+            return Ok(result);
+        }
     }
 }
 

@@ -21,7 +21,7 @@ namespace Application
             return await _userRepository.DeleteUserAsync(id);
         }
 
-        public async Task<User> GetUserByIdAsync(int id)
+        public async Task<User?> GetUserByIdAsync(int id)
         {
             return await _userRepository.GetUserByIdAsync(id);
         }
@@ -29,6 +29,11 @@ namespace Application
         public async Task<IEnumerable<User>> GetUsersAsync()
         {
             return await _userRepository.GetUsersAsync();
+        }
+
+        public async Task<User?> LoginAsync(string email, string pass)
+        {
+           return await _userRepository.LoginAsync(email, pass);
         }
 
         public async Task<bool> UpdateUserAsync(User user)

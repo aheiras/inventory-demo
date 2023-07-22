@@ -1,17 +1,47 @@
 ﻿@inherits LayoutComponentBase
+@inject NavigationManager Navigation
 
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+<MatAppBarContainer>
+    <MatAppBar>
+        <MatAppBarRow>
+            <MatAppBarSection>
+                <MatButton Raised="true" Icon="inventory" @onclick="GoToInventory">Inventario</MatButton>
+                <MatButton Raised="true" Icon="account_circle" @onclick="GoToUsers">Usuarios</MatButton>
+                <MatButton Raised="true" Icon="logout" @onclick="GoToLogin">Sesión</MatButton>
+            </MatAppBarSection>
+        </MatAppBarRow>
+    </MatAppBar>
+</MatAppBarContainer>
 
-    <main>
-        <div class="top-row px-4">
-            <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
-        </div>
-
-        <article class="content px-4">
+<div class="page-content">
+    <CascadingValue Value="@loggedUser">
             @Body
-        </article>
-    </main>
+    </CascadingValue>
 </div>
+
+@code {
+
+    private LoggedUser loggedUser = new LoggedUser();
+
+    private void GoToLogin()
+    {
+        loggedUser.LogoutUser();
+        Navigation.NavigateTo("/login");
+    }
+
+    private void GoToUsers()
+    {
+        if (loggedUser.Id != 0)
+        {
+            Navigation.NavigateTo("/users");
+        }
+    }
+
+    private void GoToInventory()
+    {
+        if (loggedUser.Id != 0)
+        {
+            Navigation.NavigateTo("/inventory");
+        }
+    }
+}
